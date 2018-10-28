@@ -1,6 +1,6 @@
 # ansible-cloudwatch-dashboard
 
-A ansible module for manage AWS CloudWatch Dashboards.
+Ansible module for manage AWS CloudWatch Dashboards.
 
 ## Requirements
 
