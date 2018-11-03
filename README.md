@@ -4,7 +4,7 @@ Ansible module for manage AWS CloudWatch Dashboards.
 
 ## Requirements
 
-Ansible 2.2+
+Ansible 2.4+
 
 ## Documentation
 
