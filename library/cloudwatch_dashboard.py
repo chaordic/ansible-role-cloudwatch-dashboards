@@ -194,17 +194,25 @@ class CWDashboard:
 
         current_body = current_body['DashboardBody']
 
-        self.result['changed'] = {'changed': body_j != current_body}
+        self.result['changed'] = self.compare_dashboard_body(body_j,
+                                                             current_body)
 
-        try:
-            response = self.client.put_dashboard(DashboardName=self.name,
-                                                 DashboardBody=body_j)
-        except (botocore.exceptions.BotoCoreError,
-                botocore.exceptions.ClientError) as e:
-            self.module.fail_json_aws(e, msg="Couldn't put dashboard %s"
-                                      % self.name)
+        if self.module.check_mode:
+            response = {'msg': 'There is no http response in check mode.'}
+        else:
+            try:
+                response = self.client.put_dashboard(DashboardName=self.name,
+                                                     DashboardBody=body_j)
+            except (botocore.exceptions.BotoCoreError,
+                    botocore.exceptions.ClientError) as e:
+                self.module.fail_json_aws(e, msg="Couldn't put dashboard %s"
+                                          % self.name)
 
         self.result['response'] = response
+
+    def compare_dashboard_body(self, user_body, current_body):
+        return user_body != current_body
+
 
     def get_result(self):
         return self.result
