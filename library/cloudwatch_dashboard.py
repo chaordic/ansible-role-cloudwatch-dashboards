@@ -184,6 +184,19 @@ class CWDashboard:
         body_j = json.dumps(body)
 
         try:
+            current_body = self.client.get_dashboard(DashboardName=self.name)
+
+        except (botocore.exceptions.BotoCoreError,
+                botocore.exceptions.ClientError) as e:
+            self.module.fail_json_aws(e,
+                                      msg="Couldn't get current dashboard %s"
+                                      % self.name)
+
+        current_body = current_body['DashboardBody']
+
+        self.result['changed'] = {'changed': body_j != current_body}
+
+        try:
             response = self.client.put_dashboard(DashboardName=self.name,
                                                  DashboardBody=body_j)
         except (botocore.exceptions.BotoCoreError,
