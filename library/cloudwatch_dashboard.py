@@ -186,16 +186,22 @@ class CWDashboard:
         try:
             current_body = self.client.get_dashboard(DashboardName=self.name)
 
+        except botocore.exceptions.ClientError as e:
+            if e.response['Error']['Code'] == "ResourceNotFound":
+                pass
         except (botocore.exceptions.BotoCoreError,
                 botocore.exceptions.ClientError) as e:
             self.module.fail_json_aws(e,
                                       msg="Couldn't get current dashboard %s"
                                       % self.name)
 
-        current_body = current_body['DashboardBody']
-
-        self.result['changed'] = self.compare_dashboard_body(body_j,
+        try:
+            current_body
+            current_body = current_body['DashboardBody']
+            self.result['changed'] = self.compare_dashboard_body(body_j,
                                                              current_body)
+        except NameError:
+            pass
 
         if self.module.check_mode:
             response = {'msg': 'There is no http response in check mode.'}
