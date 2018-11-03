@@ -72,10 +72,15 @@ except ImportError:
 import json
 import traceback
 from ansible.module_utils._text import to_native
-from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.ec2 import (HAS_BOTO3, boto3_conn, ec2_argument_spec,
                                       get_aws_connection_info)
 
+from ansible.module_utils.aws.core import AnsibleAWSModule
+
+try:
+    import botocore
+except ImportError:
+    pass  # handled by AnsibleAWSModule
 
 class CWDashboard:
 
@@ -215,7 +220,7 @@ def main():
         widgets=dict(type='list', required=True)
     )
 
-    module = AnsibleModule(
+    module = AnsibleAWSModule(
             argument_spec=module_args,
             supports_check_mode=True,
     )
@@ -228,10 +233,10 @@ def main():
     widgets = module.params['widgets']
 
     cww = CWDashboard(module,
-                       get_cw_client(module),
-                       name,
-                       state,
-                       widgets)
+                      get_cw_client(module),
+                      name,
+                      state,
+                      widgets)
 
     if state == "present":
         cww.create_widgets()
