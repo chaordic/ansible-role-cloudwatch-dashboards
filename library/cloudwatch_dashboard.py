@@ -202,13 +202,18 @@ def get_cw_client(module):
                                                                   boto3=HAS_BOTO3)
     if not region:
             module.fail_json(msg="The AWS region must be specified as an "
-                                 "environment variable or in the AWS credentials "
-                                 "profile.")
+                                 "environment variable or in the AWS "
+                                 "credentials profile.")
     try:
-        client = boto3_conn(module, conn_type='client', resource='cloudwatch',
-                            region=region, endpoint=ec2_url, **aws_connect_kwargs)
+        client = boto3_conn(module,
+                            conn_type='client',
+                            resource='cloudwatch',
+                            region=region,
+                            endpoint=ec2_url,
+                            **aws_connect_kwargs)
         return client
-    except (botocore.exceptions.ClientError, botocore.exceptions.ValidationError) as e:
+    except (botocore.exceptions.ClientError,
+            botocore.exceptions.ValidationError) as e:
         module.fail_json_aws(e, msg="Failure connecting boto3 to AWS: %s"
                              % to_native(e), exception=traceback.format_exc())
 
