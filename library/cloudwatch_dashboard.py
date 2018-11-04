@@ -160,7 +160,7 @@ class CWDashboard:
                                                                   'max': w['yaxis_right'][1]}
 
                 if 'annotations' in w:
-                    widget_aux['properties']['annotations'] = self.annotations
+                    widget_aux['properties']['annotations'] =  json.loads(w['annotations'])
 
             elif w['type'] == 'text':
                 widget_aux = {'type': w['type'],
