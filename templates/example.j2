@@ -12,8 +12,8 @@ widgets:
     period: 60
     stat: Sum
     metrics:
-        {% for tg in target_groups -%}
-        - [ "AWS/ApplicationELB", "RequestCount", "TargetGroup", "{{ tg.arn }}", "LoadBalancer", "{{ elb_arn | regex_replace('.*loadbalancer/','') }}", { "stat": "Sum", "label": "{{ tg.name }}" } ]
+        {% for tg in tg_facts.target_groups %}
+        - [ "AWS/ApplicationELB", "RequestCount", "TargetGroup", "{{ tg.target_group_arn.split(':')[5] }}", "LoadBalancer", "{{ elb_arn | regex_replace('.*loadbalancer/','') }}", { "stat": "Sum", "label": "{{ tg.target_group_name }}" } ]
         {% endfor %}
 
   - name: "TargetResponseTime Average"
@@ -27,8 +27,8 @@ widgets:
     annotations: |
           { "horizontal": [ { "label": "1s", "value": 1 }, { "label": "500ms", "value": 0.5 }, { "label": "200ms", "value": 0.2 } ] }
     metrics:
-        {% for tg in target_groups -%}
-        - [ "AWS/ApplicationELB", "TargetResponseTime", "TargetGroup", "{{ tg.arn }}", "LoadBalancer", "{{ elb_arn | regex_replace('.*loadbalancer/','') }}", { "stat": "Average", "label": "{{ tg.name }} Average" } ]
+        {% for tg in tg_facts.target_groups %}
+        - [ "AWS/ApplicationELB", "TargetResponseTime", "TargetGroup", "{{ tg.target_group_arn.split(':')[5] }}", "LoadBalancer", "{{  elb_arn | regex_replace('.*loadbalancer/','') }}", { "stat": "Average", "label": "{{ tg.target_group_name }} Average" } ]
         {% endfor %}
 
   - name: "CPU Utilization"
@@ -39,8 +39,8 @@ widgets:
     yaxis_left: [0, 100]
     yaxis_right: [0, 100]
     metrics:
-        {% for instance in ec2_instances -%}
-        - [ "AWS/EC2", "CPUUtilization", "InstanceId", "{{ instance.id }}", { "period": 60, "label": "{{ instance.name }}" } ]
+        {% for i in ec2_facts.instances %}
+        - [ "AWS/EC2", "CPUUtilization", "InstanceId", "{{ i.instance_id }}", { "period": 60, "label": "{{ i.tags.Name }}" } ]
         {% endfor %}
 
   - name: "Network In/Out"
@@ -52,9 +52,9 @@ widgets:
     yaxis_left: [0, 7864320000]
     yaxis_right: [0, 7864320000]
     metrics:
-        {% for instance in ec2_instances -%}
-        - [ "AWS/EC2", "NetworkIn", "InstanceId", "{{ instance.id }}", { "label": "{{ instance.name }} NetworkIn" } ]
-        - [ ".", "NetworkOut", ".", ".", { "label": "{{ instance.name }} NetworkOut" } ]
+        {% for i in ec2_facts.instances %}
+        - [ "AWS/EC2", "NetworkIn", "InstanceId", "{{ i.instance_id }}", { "label": "{{ i.tags.Name }} NetworkIn" } ]
+        - [ ".", "NetworkOut", ".", ".", { "label": "{{ i.tags.Name }} NetworkOut" } ]
         {% endfor %}
 
   - name: "Instance Disk IOPS"
@@ -63,6 +63,6 @@ widgets:
     stacked: False
     period: 60
     metrics:
-        {% for instance in ec2_instances -%}
-        - [ "AWS/EC2", "DiskWriteOps", "InstanceId", "{{ instance.id }}", { "label": "{{ instance.name }}" } ]
+        {% for i in ec2_facts.instances %}
+        - [ "AWS/EC2", "DiskWriteOps", "InstanceId", "{{ i.instance_id }}", { "label": "{{ i.tags.Name }}" } ]
         {% endfor %}

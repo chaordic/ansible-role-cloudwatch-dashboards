@@ -2,45 +2,35 @@
   - block:
     - name: "Dashboard - {{ item_dashboard.name }} | Find elastic load balancer ARN"
       elb_application_lb_facts:
-        names:
-          - "{{ item_dashboard.elb_name }}"
+        names: "{{ item_dashboard.ec2_elb_names }}"
       register: elb_facts
 
-    - name: "Dashboard - {{ item_dashboard.name }} | Find elb_arn var"
+    - name: "Dashboard - {{ item_dashboard.name }} | Set elb_arn var"
       set_fact:
         elb_arn: "{{ elb_facts.load_balancers.0.load_balancer_arn }}"
 
     - name: "Dashboard - {{ item_dashboard.name }} | Gather target group facts"
       elb_target_group_facts:
-        load_balancer_arn: "{{ elb_arn }}"
+        load_balancer_arn: "{{ elb_facts.load_balancers.0.load_balancer_arn }}"
       register: tg_facts
-    when: item_dashboard.elb_name is defined
+    when: item_dashboard.ec2_elb_names is defined and item_dashboard.ec2_elb_names|length == 1
 
-  - block:
-    - name: "Dashboard - {{ item_dashboard.name }} | Clean target_groups fact"
-      set_fact:
-        target_groups: []
+  - name: "Dashboard - {{ item_dashboard.name }} | Find elastic load balancers ARNs"
+    elb_application_lb_facts:
+      names: "{{ item_dashboard.ec2_elb_names }}"
+    register: elb_facts
+    when: item_dashboard.ec2_elb_names is defined and item_dashboard.ec2_elb_names|length > 1
 
-    - name: "Dashboard - {{ item_dashboard.name }} | Fill target_groups fact"
-      set_fact:
-        target_groups: "{{ target_groups + [ { 'name': item.target_group_name, 'arn': item.target_group_arn.split(':')[5] } ] }}"
-      with_items: "{{ tg_facts.target_groups }}"
-      when: not ("dummy" in item.target_group_arn)
-
-    - name: "Dashboard - {{ item_dashboard.name }} | Gather EC2 facts"
-      ec2_instance_facts:
-        filters: "{{ { 'tag:' ~ tag_field: tag_value } }}"
-      vars:
-        tag_field: "{{ item_dashboard.ec2_tag_field }}"
-        tag_value: "{{ item_dashboard.ec2_tag_value }}"
-      register: ec2_facts
-
-    - name: "Dashboard - {{ item_dashboard.name }} | Define ec2_instances fact"
-      set_fact:
-        ec2_instances: "{{ ec2_facts | json_query(query) }}"
-      vars:
-        query: "instances[].{name: tags.Name, id: instance_id, devices: block_device_mappings}"
-    when: (item_dashboard.ec2_tag_field and item_dashboard.ec2_tag_value) is defined
+  - name: "Dashboard - {{ item_dashboard.name }} | Gather EC2 facts"
+    ec2_instance_facts:
+      filters: "{{ { 'tag:' ~ tag_field: tag_value } }}"
+    vars:
+      tag_field: "{{ item_dashboard.ec2_tag_field }}"
+      tag_value: "{{ item_dashboard.ec2_tag_value }}"
+    register: ec2_facts
+    when:
+      - item_dashboard.ec2_tag_field is defined
+      - item_dashboard.ec2_tag_value is defined
 
   - name: "Dashboard - {{ item_dashboard.name }} | Find template file"
     find:

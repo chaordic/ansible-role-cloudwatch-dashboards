@@ -18,13 +18,15 @@ Available variables are listed below, along with default values (see `defaults/m
 cloudwatch_dashboards:
   - name: My Frontend Dashboard
     template: example.j2
-    elb_name: elb-frontend
+    ec2_elb_names:
+      - elb-frontend
     ec2_tag_field: Name
     ec2_tag_value: my-frontend-app-name
 
   - name: My Backend Dashboard
     template: example.j2
-    elb_name: elb-backend
+    ec2_elb_names:
+      - elb-backend
     ec2_tag_field: Name
     ec2_tag_value: my-backend-app-name
 ```
@@ -36,7 +38,8 @@ cloudwatch_dashboards:
     cloudwatch_dashboards:
       - name: My Dashboard
         template: example.j2
-        elb_name: my-elb-app
+        ec2_elb_names:
+          - my-elb-app
         ec2_tag_field: Name
         ec2_tag_value: my-app-name
 
