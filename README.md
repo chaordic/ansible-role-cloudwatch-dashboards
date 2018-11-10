@@ -1,6 +1,6 @@
 # Ansible Role: cloudwatch-dashboards
 
-Ansible role to create and rebuild AWS CloudWatch Dashboards in a dynamic way. The dashboards are built based on custom templates, see [example](https://github.com/chaordic/ansible-role-cloudwatch-dashboards/blob/master/meta/main.yml).
+Ansible role to create and rebuild AWS CloudWatch Dashboards in a dynamic way. The dashboards are built based on custom templates, see [example](https://github.com/chaordic/ansibe-roletch-dashboards/blob/master/templates/example.j2).
 
 ## Requirements
 
@@ -9,7 +9,7 @@ Ansible role to create and rebuild AWS CloudWatch Dashboards in a dynamic way. T
 
 ## Module
 
-This role includes an AWS custom module. There is a [documentation in code](.....library/cloudwatch_dashboard.py).
+This role includes an AWS custom module. There is a [documentation in code](library/cloudwatch_dashboard.py).
 
 ## Role Variables
 
