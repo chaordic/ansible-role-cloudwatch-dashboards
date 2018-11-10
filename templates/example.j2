@@ -1,0 +1,68 @@
+---
+widgets:
+
+  - name: "Text Widget"
+    type: text
+    markdown: "This is a dynamic dashboard created by Ansible! YAY!"
+
+  - name: "Target RequestCount"
+    type: metric
+    view: timeSeries
+    stacked: True
+    period: 60
+    stat: Sum
+    metrics:
+        {% for tg in target_groups -%}
+        - [ "AWS/ApplicationELB", "RequestCount", "TargetGroup", "{{ tg.arn }}", "LoadBalancer", "{{ elb_arn | regex_replace('.*loadbalancer/','') }}", { "stat": "Sum", "label": "{{ tg.name }}" } ]
+        {% endfor %}
+
+  - name: "TargetResponseTime Average"
+    type: metric
+    view: timeSeries
+    stacked: False
+    period: 60
+    stat: Sum
+    yaxis_left: [0, 1]
+    yaxis_right: [0, 1]
+    annotations: |
+          { "horizontal": [ { "label": "1s", "value": 1 }, { "label": "500ms", "value": 0.5 }, { "label": "200ms", "value": 0.2 } ] }
+    metrics:
+        {% for tg in target_groups -%}
+        - [ "AWS/ApplicationELB", "TargetResponseTime", "TargetGroup", "{{ tg.arn }}", "LoadBalancer", "{{ elb_arn | regex_replace('.*loadbalancer/','') }}", { "stat": "Average", "label": "{{ tg.name }} Average" } ]
+        {% endfor %}
+
+  - name: "CPU Utilization"
+    type: metric
+    view: timeSeries
+    stacked: False
+    period: 60
+    yaxis_left: [0, 100]
+    yaxis_right: [0, 100]
+    metrics:
+        {% for instance in ec2_instances -%}
+        - [ "AWS/EC2", "CPUUtilization", "InstanceId", "{{ instance.id }}", { "period": 60, "label": "{{ instance.name }}" } ]
+        {% endfor %}
+
+  - name: "Network In/Out"
+    type: metric
+    view: timeSeries
+    stacked: False
+    period: 60
+    stat: Average
+    yaxis_left: [0, 7864320000]
+    yaxis_right: [0, 7864320000]
+    metrics:
+        {% for instance in ec2_instances -%}
+        - [ "AWS/EC2", "NetworkIn", "InstanceId", "{{ instance.id }}", { "label": "{{ instance.name }} NetworkIn" } ]
+        - [ ".", "NetworkOut", ".", ".", { "label": "{{ instance.name }} NetworkOut" } ]
+        {% endfor %}
+
+  - name: "Instance Disk IOPS"
+    type: metric
+    view: timeSeries
+    stacked: False
+    period: 60
+    metrics:
+        {% for instance in ec2_instances -%}
+        - [ "AWS/EC2", "DiskWriteOps", "InstanceId", "{{ instance.id }}", { "label": "{{ instance.name }}" } ]
+        {% endfor %}

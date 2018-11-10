@@ -1,0 +1,74 @@
+---
+  - block:
+    - name: "Dashboard - {{ item_dashboard.name }} | Find elastic load balancer ARN"
+      elb_application_lb_facts:
+        names:
+          - "{{ item_dashboard.elb_name }}"
+      register: elb_facts
+
+    - name: "Dashboard - {{ item_dashboard.name }} | Find elb_arn var"
+      set_fact:
+        elb_arn: "{{ elb_facts.load_balancers.0.load_balancer_arn }}"
+
+    - name: "Dashboard - {{ item_dashboard.name }} | Gather target group facts"
+      elb_target_group_facts:
+        load_balancer_arn: "{{ elb_arn }}"
+      register: tg_facts
+    when: item_dashboard.elb_name is defined
+
+  - block:
+    - name: "Dashboard - {{ item_dashboard.name }} | Clean target_groups fact"
+      set_fact:
+        target_groups: []
+
+    - name: "Dashboard - {{ item_dashboard.name }} | Fill target_groups fact"
+      set_fact:
+        target_groups: "{{ target_groups + [ { 'name': item.target_group_name, 'arn': item.target_group_arn.split(':')[5] } ] }}"
+      with_items: "{{ tg_facts.target_groups }}"
+      when: not ("dummy" in item.target_group_arn)
+
+    - name: "Dashboard - {{ item_dashboard.name }} | Gather EC2 facts"
+      ec2_instance_facts:
+        filters: "{{ { 'tag:' ~ tag_field: tag_value } }}"
+      vars:
+        tag_field: "{{ item_dashboard.ec2_tag_field }}"
+        tag_value: "{{ item_dashboard.ec2_tag_value }}"
+      register: ec2_facts
+
+    - name: "Dashboard - {{ item_dashboard.name }} | Define ec2_instances fact"
+      set_fact:
+        ec2_instances: "{{ ec2_facts | json_query(query) }}"
+      vars:
+        query: "instances[].{name: tags.Name, id: instance_id, devices: block_device_mappings}"
+    when: (item_dashboard.ec2_tag_field and item_dashboard.ec2_tag_value) is defined
+
+  - name: "Dashboard - {{ item_dashboard.name }} | Find template file"
+    find:
+      paths: templates
+      file_type: file
+      patterns: "{{ item_dashboard.template }}"
+      recurse: yes
+    register: find_template
+
+  - block:
+    - name: "Dashboard - {{ item_dashboard.name }} | Parse template"
+      template:
+        src: "{{ find_template.files[0].path }}"
+        dest: /tmp/cloudwatch-widgets.yml
+      changed_when: False
+
+    - name: "Dashboard - {{ item_dashboard.name }} | Include widget vars"
+      include_vars:
+        file: /tmp/cloudwatch-widgets.yml
+
+    - name: "Dashboard - {{ item_dashboard.name }} | Rebuild cloudwatch dashboard"
+      cloudwatch_dashboard:
+        name: "{{ item_dashboard.name }}"
+        state: present
+        widgets: "{{ widgets }}"
+    always:
+    - name: "Dashboard - {{ item_dashboard.name }} | Clean generated file"
+      file:
+        state: absent
+        path: /tmp/cloudwatch-widgets.yml
+      changed_when: False

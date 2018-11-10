@@ -1,0 +1,18 @@
+---
+- name: Include all dashboard vars
+  include_tasks: rebuild-dashboard.yml
+  with_items: "{{ cloudwatch_dashboards }}"
+  loop_control:
+    loop_var: item_dashboard
+  when: not (var_dashboard is defined)
+
+- block:
+  - name: Set item_dashboard fact
+    set_fact:
+      item_dashboard: '{{ cloudwatch_dashboards | json_query(query) | first }}'
+    vars:
+      query: "[?name=='{{var_dashboard}}']"
+
+  - name: Include specific dashboard vars
+    include_tasks: rebuild-dashboard.yml
+  when: var_dashboard is defined

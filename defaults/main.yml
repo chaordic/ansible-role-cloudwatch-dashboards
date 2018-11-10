@@ -1,0 +1,7 @@
+---
+cloudwatch_dashboards:
+  - name: My Frontend Dashboard
+    template: example.j2
+    elb_name: elb-frontend
+    ec2_tag_field: Name
+    ec2_tag_value: my-frontend-app-name
