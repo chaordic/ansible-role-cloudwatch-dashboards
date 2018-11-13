@@ -1,8 +1,13 @@
 ---
 cloudwatch_dashboards:
-  - name: My Frontend Dashboard
+  - name: My Dashboard
     template: example.j2
-    ec2_elb_names:
-      - my-elb-app
-    ec2_tag_field: Name
-    ec2_tag_value: my-frontend-app-name
+    describe_resources:
+      ec2_instance_filter: 
+        "tag:Name": app_name
+        instance-state-name: running
+      elb:
+        - elb_name
+      cloudfront:
+        - id: Q03I1XDOS00WEP
+          label: cdn_name

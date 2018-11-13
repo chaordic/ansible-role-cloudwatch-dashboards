@@ -16,20 +16,17 @@ This role includes an AWS custom module. There is a [documentation in code](libr
 Available variables are listed below, along with default values (see `defaults/main.yml`):
 ```yaml
 cloudwatch_dashboards:
-  - name: My Frontend Dashboard
+  - name: My Dashboard
     template: example.j2
-    ec2_elb_names:
-      - elb-frontend
-    ec2_tag_field: Name
-    ec2_tag_value: my-frontend-app-name
-
-  - name: My Backend Dashboard
-    template: example.j2
-    ec2_elb_names:
-      - elb-backend
-    ec2_tag_field: Name
-    ec2_tag_value: my-backend-app-name
-```
+    describe_resources:
+      ec2_instance_filter:
+        "tag:Name": app_name
+        instance-state-name: running
+      elb:
+        - elb_name
+      cloudfront:
+        - id: Q03I1XDOS00WEP
+          label: cdn_name
 
 ## Example Playbook
 ```yaml
@@ -38,10 +35,9 @@ cloudwatch_dashboards:
     cloudwatch_dashboards:
       - name: My Dashboard
         template: example.j2
-        ec2_elb_names:
-          - my-elb-app
-        ec2_tag_field: Name
-        ec2_tag_value: my-app-name
+        describe_resources:
+          ec2_instance_filter:
+            "tag:Name": app_name
 
   roles:
     - role: cloudwatch-dashboards.chaordic
