@@ -1,36 +1,22 @@
 ---
-  - block:
-    - name: "Dashboard - {{ item_dashboard.name }} | Find elastic load balancer ARN"
-      elb_application_lb_facts:
-        names: "{{ item_dashboard.ec2_elb_names }}"
-      register: elb_facts
-
-    - name: "Dashboard - {{ item_dashboard.name }} | Set elb_arn var"
-      set_fact:
-        elb_arn: "{{ elb_facts.load_balancers.0.load_balancer_arn }}"
-
-    - name: "Dashboard - {{ item_dashboard.name }} | Gather target group facts"
-      elb_target_group_facts:
-        load_balancer_arn: "{{ elb_facts.load_balancers.0.load_balancer_arn }}"
-      register: tg_facts
-    when: item_dashboard.ec2_elb_names is defined and item_dashboard.ec2_elb_names|length == 1
-
-  - name: "Dashboard - {{ item_dashboard.name }} | Find elastic load balancers ARNs"
+  - name: "Dashboard - {{ item_dashboard.name }} | Find elastic load balancer ARN"
     elb_application_lb_facts:
-      names: "{{ item_dashboard.ec2_elb_names }}"
+      names: "{{ item_dashboard.describe_resources['elb'] }}"
     register: elb_facts
-    when: item_dashboard.ec2_elb_names is defined and item_dashboard.ec2_elb_names|length > 1
+    when: item_dashboard.describe_resources['elb'] is defined
+
+  - name: "Dashboard - {{ item_dashboard.name }} | Gather target group facts"
+    elb_target_group_facts:
+      load_balancer_arn: "{{ item.load_balancer_arn }}"
+    register: tg_facts
+    with_items: "{{ elb_facts.load_balancers }}"
+    when: item_dashboard.describe_resources['elb'] is defined
 
   - name: "Dashboard - {{ item_dashboard.name }} | Gather EC2 facts"
     ec2_instance_facts:
-      filters: "{{ { 'tag:' ~ tag_field: tag_value } }}"
-    vars:
-      tag_field: "{{ item_dashboard.ec2_tag_field }}"
-      tag_value: "{{ item_dashboard.ec2_tag_value }}"
+      filters: "{{ item_dashboard.describe_resources['ec2_instance_filter'] }}"
     register: ec2_facts
-    when:
-      - item_dashboard.ec2_tag_field is defined
-      - item_dashboard.ec2_tag_value is defined
+    when: item_dashboard.describe_resources['ec2_instance_filter'] is defined
 
   - name: "Dashboard - {{ item_dashboard.name }} | Find template file"
     find:
