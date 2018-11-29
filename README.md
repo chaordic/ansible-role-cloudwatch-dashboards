@@ -29,7 +29,6 @@ cloudwatch_dashboards:
           label: cdn_name
 
 ## Example Playbook
-```yaml
 - hosts: all
   vars:
     cloudwatch_dashboards:
